@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配對遊戲</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 每行顯示四張卡片 */
+            gap: 20px;
+            display: none; /* 預設不顯示 */
+        }
+
+        .card-container {
+            perspective: 1000px;
+        }
+
+        .card {
+            width: 150px;
+            height: 200px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+        }
+
+        /* 卡片正面的樣式 */
+        .card-front {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #09b054;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 卡片背面的樣式 */
+        .card-back {
+            background-color: #ffffff;
+            transform: rotateY(180deg);
+        }
+
+        .card-back img {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        /* 卡片翻轉時的效果 */
+        .card.flip {
+            transform: rotateY(180deg);
+        }
+
+        /* 樣式化按鈕 */
+        .controls {
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            font-size: 16px;
+            cursor: pointer;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        /* 開始遊戲按鈕樣式 */
+        #startGameBtn {
+            background-color: #17a2b8; /* 藍綠色 */
+        }
+
+        /* 顯示正面按鈕樣式 - 藍色 */
+        #showFrontBtn {
+            background-color: #007bff; /* 藍色 */
+        }
+
+        /* 顯示背面按鈕樣式 - 綠色 */
+        #showBackBtn {
+            background-color: #28a745; /* 綠色 */
+        }
+
+        /* 按鈕 hover 效果 */
+        button:hover {
+            opacity: 0.8;
+        }
+
+        /* 主題選擇器的樣式 */
+        select {
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <select id="themeSelector">
+            <option value="food">食物主題</option>
+            <option value="fish">魚類主題</option>
+        </select>
+        <button id="startGameBtn" onclick="startGame()">開始遊戲</button>
+        <button id="showFrontBtn" onclick="showFront()">顯示正面</button>
+        <button id="showBackBtn" onclick="showBack()">顯示背面</button>
+    </div>
+
+    <div class="cards-grid" id="cardsGrid"></div>
+
+    <script>
+        // 定義不同主題的圖片
+        const themes = {
+            food: [
+                'image/food1.png',
+                'image/food2.png',
+                'image/food3.png',
+                'image/food4.png',
+                'image/food5.png',
+                'image/food6.png',
+                'image/food7.png',
+                'image/food8.png'
+            ],
+            fish: [
+                'image/fish1.png',
+                'image/fish2.png',
+                'image/fish3.png',
+                'image/fish4.png',
+                'image/fish5.png',
+                'image/fish6.png',
+                'image/fish7.png',
+                'image/fish8.png'
+            ]
+        };
+
+        let selectedTheme = 'food';  // 默認為食物主題
+        let cardImages = [];
+
+        // 更新主題選擇器的事件監聽
+        document.getElementById('themeSelector').addEventListener('change', function (event) {
+            selectedTheme = event.target.value;  // 獲取選中的主題
+        });
+
+        // 獲取卡片網格容器
+        const cardsGrid = document.getElementById('cardsGrid');
+
+        // 使用 JavaScript 動態創建卡片
+        function createCards() {
+            cardsGrid.innerHTML = '';  // 清空之前的卡片
+
+            // 獲取當前主題的圖片並重複兩次
+            cardImages = themes[selectedTheme].concat(themes[selectedTheme]);
+
+            // 打亂卡片順序
+            cardImages = cardImages.sort(() => 0.5 - Math.random());
+
+            cardImages.forEach((imageSrc, index) => {
+                // 創建卡片容器
+                const cardContainer = document.createElement('div');
+                cardContainer.classList.add('card-container');
+
+                // 創建卡片元素
+                const card = document.createElement('div');
+                card.classList.add('card');
+
+                // 創建卡片正面元素
+                const cardFront = document.createElement('div');
+                cardFront.classList.add('card-front');
+
+                // 創建卡片背面元素
+                const cardBack = document.createElement('div');
+                cardBack.classList.add('card-back');
+
+                // 背面顯示圖片
+                const img = document.createElement('img');
+                img.src = imageSrc;
+                img.alt = `Image ${index + 1}`;
+                cardBack.appendChild(img);
+
+                // 將正面和背面添加到卡片
+                card.appendChild(cardFront);
+                card.appendChild(cardBack);
+
+                // 添加點擊事件，讓卡片翻轉
+                cardContainer.addEventListener('click', function () {
+                    flipCard(card);
+                });
+
+                // 將卡片添加到卡片容器
+                cardContainer.appendChild(card);
+
+                // 將卡片容器添加到網格
+                cardsGrid.appendChild(cardContainer);
+            });
+        }
+
+        // 翻轉卡片的函數
+        function flipCard(cardElement) {
+            cardElement.classList.toggle('flip');
+        }
+
+        // 顯示所有卡片正面
+        function showFront() {
+            document.querySelectorAll('.card').forEach(card => {
+                card.classList.remove('flip');
+            });
+        }
+
+        // 顯示所有卡片背面
+        function showBack() {
+            document.querySelectorAll('.card').forEach(card => {
+                card.classList.add('flip');
+            });
+        }
+
+        // 開始遊戲函數
+        function startGame() {
+            // 創建卡片
+            createCards();
+
+            // 顯示卡片網格
+            cardsGrid.style.display = 'grid';
+
+            // 所有卡片先顯示背面
+            showBack();
+
+            // 過 10 秒後翻轉到正面
+            setTimeout(showFront, 10000);
+        }
+    </script>
+
+</body>
+</html>
